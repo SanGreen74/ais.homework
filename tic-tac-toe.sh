@@ -11,10 +11,10 @@ defaultColor="\033[0m"
 
 colors=("$redColor" "$magnetaColor")
 
-up="w"
-down="s"
-right="d"
-left="a"
+up="[A"
+down="[B"
+right="[C"
+left="[D"
 
 players=("X" "O")
 
@@ -110,21 +110,22 @@ function onMoveClick {
 }
 
 function makeStep {
-	read -s -n1 code
-  echo $code
-	if [ "$code" == "$up" ] || [ "$code" == "$down" ] || [ "$code" == "$left" ] || [ "$code" == "$right" ]
-	then
-    onMoveClick $code
-	else
-		local index=$(getIndexFromCoordinates $x $y)
-		if [[ "${field[$index]}" == "$emptyCellChar" ]]
-		then
+  read -s -n1 code
+	if [[ "$code" == $'\x1B' ]]
+  then
+    read -s -n2 cursor
+    onMoveClick $cursor
+  else
+    local index=$(getIndexFromCoordinates $x $y)
+    if [[ "${field[$index]}" == "$emptyCellChar" ]]
+    then
       local currentPlayer=$(getCurrentPlayer)
       local symbol=${players[$currentPlayer]}
-			field[$index]="$symbol"
-			emptyCellsCount=$[ $emptyCellsCount - 1 ]
-		fi
-	fi
+      field[$index]="$symbol"
+      emptyCellsCount=$[ $emptyCellsCount - 1 ]
+    fi
+  fi
+
   renderField
   local winnerInfo=$(getWinnerMessage)
   if [ ! -z "$winnerInfo" ]
@@ -134,7 +135,7 @@ function makeStep {
   fi
 }
 
-
+renderField
 while [ $emptyCellsCount -ne 0 ] 
 do
   makeStep
