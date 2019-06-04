@@ -1,0 +1,114 @@
+<html>
+	<head>
+		<HTA: APPLICATION id="HTA" 
+			applicationName="TEST HTA"
+			border="thin"
+			borderStyle="normal"
+			caption="yes"
+			icon="С:/temp/favicon. ico"
+			maximizeButton="yes"
+			minimizeButton="yes"
+			showInTaskbar="no"
+			windowState="normal"
+			innerBorder="yes"
+			navigable="yes"
+			scroll="auto"
+			scrollFlat="yes"
+			singleInstance="yes"
+			sysMenu="no"
+			contextMenu="yes"
+			selection="yes" 
+			version="1.0" />
+		<style>
+			th, td { 
+				padding: 2px 10px 2px 10px;
+			}
+		
+			table, td, tr, th { 
+				border: solid 1px black; 
+				border-collapse: collapse;
+			}
+		</style>
+	</head>
+	<body onload="renderProcesses()">
+    <button onclick="renderProcesses()">Update list</button>
+		<script>
+      function renderProcesses() {
+        var table = document.getElementById("processTable");
+        clearTableProcessesIfNeed(table);
+        var processes = getProcesses();
+
+				for (var i = 0; i < processes.length; i++) {
+          var process = processes[i];
+          var child = document.createElement("tr");
+					var td1 = document.createElement("td");
+					var td2 = document.createElement("td");
+					var td3 = document.createElement("td");
+					var btn = document.createElement("input");
+					
+					td1.innerHTML = process.pid;
+					td2.innerHTML = process.title;
+					
+					btn.type = "button";
+          btn.value = "Kill!";
+          var processPid = process.pid;
+					btn.onclick = killButtonOnClick(processPid);  
+					
+					child.appendChild(td1);
+					child.appendChild(td2);
+					child.appendChild(td3);
+					td3.appendChild(btn);
+					table.appendChild(child);
+				}
+      }
+      
+      function killButtonOnClick(id) {
+        return function() {
+            terminateProcess(id);
+            renderProcesses();
+        }
+      }
+
+      function clearTableProcessesIfNeed(table) {
+        while (table.firstChild) {
+          table.removeChild(table.firstChild);
+        }
+      }
+      
+      function terminateProcess(pid) {
+        var objSWBEMLocator = new ActiveXObject("WbemScripting.SWbemLocator");
+        var objService = objSWBEMLocator.ConnectServer(".","root\\CIMV2");
+        var objSrv = objService.Get("Win32_Process.Handle='" + pid + "'");
+        objSrv.terminate();
+      }
+
+      function getProcesses() {
+        var objSWBEMLocator = new ActiveXObject("WbemScripting.SWbemLocator");
+        var objService = objSWBEMLocator.ConnectServer(".","root\\CIMV2");
+        var objColProcs = objService.InstancesOf("Win32_Process");
+        var processesEnumerator = new Enumerator(objColProcs);
+        var processes = [];
+        for (; !processesEnumerator.atEnd(); processesEnumerator.moveNext()) {
+            var item = processesEnumerator.item();
+            processes.push({
+              pid: item.processID,
+              title: item.name
+            });
+        }
+        return processes;
+      }
+		</script>
+		<table cellspacing="0" cellpadding="0">
+			<thead>
+				<tr>
+					<th>PID</th>
+					<th>Title</th>
+					<th>&nbsp;</th>
+				</tr>
+			</thead>
+			<tbody id="processTable">
+			</tbody>
+		</table>
+
+	</body>
+</html>
